@@ -1,0 +1,34 @@
+# Backup of config.py - Created: 2024-10-01
+# DO NOT COMMIT THIS FILE TO GIT!
+
+import os
+
+# Flask configuration
+SECRET_KEY = 'lab1r1nth_s3cr3t_k3y_2024_v1'  # Used for JWT signing!
+DEBUG = True
+UPLOAD_FOLDER = 'uploads'
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+
+# JWT Configuration
+JWT_SECRET_KEY = SECRET_KEY
+JWT_ALGORITHM = 'HS256'
+
+# Database
+DATABASE = 'labyrinth.db'
+
+# Admin credentials (TESTING ONLY):
+# Username: admin
+# Password: sup3r_s3cr3t_4dm1n_p4ss
+# Password hash: [SHA256]
+
+# Developer notes:
+# - The SECRET_KEY is used to sign JWT tokens
+# - To forge a token, use: jwt.encode({'role': 'admin', 'bypass': 'labyrinth_master', 'source': 'exploit'}, SECRET_KEY, algorithm='HS256')
+# - Make sure to update this before going live!
+
+# Vulnerability chain documented for internal security review:
+# 1. SQLi in /search allows database enumeration
+# 2. This backup file leaks JWT secret via /backup endpoint
+# 3. IDOR in /profile/<id> allows user enumeration
+# 4. Forged JWT with correct claims grants admin access
+# 5. Admin access allows calling /flag endpoint with valid token

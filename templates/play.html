@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth: Endless Loop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 86px, rgba(255,255,255,0.03) 86px, rgba(255,255,255,0.03) 88px),
+                repeating-linear-gradient(60deg, transparent, transparent 86px, rgba(255,255,255,0.03) 86px, rgba(255,255,255,0.03) 88px),
+                repeating-linear-gradient(120deg, transparent, transparent 86px, rgba(255,255,255,0.03) 86px, rgba(255,255,255,0.03) 88px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .game-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .game-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .game-header h1 {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+        .game-header p {
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .game-left {
+            flex: 1;
+        }
+        .game-right {
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+            font-size: 0.85rem;
+        }
+        .info-item strong {
+            color: #333;
+        }
+        .info-item span {
+            color: #666;
+        }
+        #gameCanvas {
+            border: 3px solid #ffd700;
+            background: #f8f9fa;
+            display: block;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            width: 100%;
+            height: auto;
+        }
+        .controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #ffd700;
+        }
+        .controls-title {
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .btn-control {
+            margin: 3px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border: none;
+            color: #333;
+            font-weight: bold;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+            transition: all 0.2s;
+            width: 60px;
+        }
+        .btn-control:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+        }
+        #status {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #ffd700;
+            font-size: 0.8rem;
+        }
+        #status strong {
+            color: #333;
+        }
+        #statusText {
+            color: #666;
+        }
+        #status.error {
+            border-left-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+        #status.error strong {
+            color: #c33;
+        }
+        .btn-secondary {
+            background: #555;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            margin: 3px;
+            width: 100%;
+        }
+        .btn-secondary:hover {
+            background: #666;
+        }
+        .btn-info {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            margin: 3px;
+            width: 100%;
+        }
+        .btn-info:hover {
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+            color: #333;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        small {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="game-container">
+        <div class="game-header">
+            <h1><i class="fas fa-dungeon"></i> The Labyrinth</h1>
+            <p>Use arrow keys or buttons to navigate. Find the exit!</p>
+        </div>
+
+        <div class="game-layout">
+            <div class="game-left">
+                <canvas id="gameCanvas" width="600" height="450"></canvas>
+            </div>
+
+            <div class="game-right">
+                <div class="game-info">
+                    <div class="info-item">
+                        <strong><i class="fas fa-map-marker-alt"></i> Position:</strong><br>
+                        <span id="position">Start (0, 0)</span>
+                    </div>
+                    <div class="info-item">
+                        <strong><i class="fas fa-walking"></i> Moves:</strong><br>
+                        <span id="moveCount">0</span>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="controls-title"><i class="fas fa-gamepad"></i> Controls</div>
+                    <div class="text-center">
+                        <div>
+                            <button class="btn btn-control" onclick="move('up')">↑</button>
+                        </div>
+                        <div>
+                            <button class="btn btn-control" onclick="move('left')">←</button>
+                            <button class="btn btn-control" onclick="move('down')">↓</button>
+                            <button class="btn btn-control" onclick="move('right')">→</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="status">
+                    <strong><i class="fas fa-info-circle"></i> Status:</strong><br>
+                    <span id="statusText">Ready to start...</span>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let player = {x: 1, y: 1};
+        let moves = 0;
+        let maze = [];
+        
+        // Generate a simple maze (visual only - server validates)
+        function generateMaze() {
+            const rows = 12, cols = 15;
+            maze = Array(rows).fill().map(() => Array(cols).fill(1));
+            
+            // Create some paths (visual only)
+            for (let i = 1; i < rows - 1; i++) {
+                for (let j = 1; j < cols - 1; j++) {
+                    if (Math.random() > 0.3) {
+                        maze[i][j] = 0;
+                    }
+                }
+            }
+            
+            maze[1][1] = 0; // Start
+            maze[rows-2][cols-2] = 2; // Exit (unreachable by design)
+        }
+        
+        function drawMaze() {
+            const cellSize = 40;
+            
+            for (let i = 0; i < maze.length; i++) {
+                for (let j = 0; j < maze[i].length; j++) {
+                    if (maze[i][j] === 1) {
+                        ctx.fillStyle = '#d0d0d0';
+                    } else if (maze[i][j] === 2) {
+                        ctx.fillStyle = '#ffd700';
+                    } else {
+                        ctx.fillStyle = '#ffffff';
+                    }
+                    
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize - 2, cellSize - 2);
+                }
+            }
+            
+            // Draw player
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(player.x * 40 + 20, player.y * 40 + 20, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        async function move(direction) {
+            const oldPos = {...player};
+            
+            // Update position (client-side - will be validated server-side)
+            switch(direction) {
+                case 'up': player.y--; break;
+                case 'down': player.y++; break;
+                case 'left': player.x--; break;
+                case 'right': player.x++; break;
+            }
+            
+            moves++;
+            document.getElementById('moveCount').textContent = moves;
+            document.getElementById('position').textContent = `(${player.x}, ${player.y})`;
+            
+            // Send move to server for validation
+            try {
+                const response = await fetch('/api/move', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        direction: direction,
+                        position: {x: player.x, y: player.y},
+                        token: null  // TODO: Get token from somewhere
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    document.getElementById('status').className = 'error';
+                    document.getElementById('statusText').innerHTML = 
+                        `❌ ${data.error}<br><small>${data.debug_info || ''}</small>`;
+                    player = oldPos; // Revert move
+                } else {
+                    document.getElementById('status').className = '';
+                    document.getElementById('statusText').innerHTML = 
+                        `✓ ${data.message}<br><small>${data.next_step || ''}</small>`;
+                }
+            } catch (error) {
+                console.error('Move error:', error);
+            }
+            
+            drawMaze();
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': move('up'); break;
+                case 'ArrowDown': move('down'); break;
+                case 'ArrowLeft': move('left'); break;
+                case 'ArrowRight': move('right'); break;
+            }
+        });
+        
+        // Initialize
+        generateMaze();
+        drawMaze();
+        
+        console.log("🎮 Maze game loaded");
+        console.log("💡 Hint: Check /static/app.js for game logic");
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
